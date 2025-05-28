@@ -80,7 +80,7 @@ class AblationCAM(BaseCAM):
         # activations
         handle = target_layer.register_forward_hook(self.save_activation)
         with torch.no_grad():
-            outputs = self.model(input_tensor)
+            outputs = self.model.predict(input_tensor)
             handle.remove()
             original_scores = np.float32(
                 [target(output).cpu().item() for target, output in zip(targets, outputs)])
@@ -123,8 +123,8 @@ class AblationCAM(BaseCAM):
                         input_batch_index = batch_index,
                         activations = self.activations,
                         num_channels_to_ablate = batch_tensor.size(0))
-                    score = [target(o).cpu().item()
-                             for o in self.model(batch_tensor)]
+                    preds = self.model.predict(batch_tensor)
+                    score = [target(o).cpu().item() for o in preds]
                     new_scores.extend(score)
                     ablation_layer.indices = ablation_layer.indices[batch_tensor.size(
                         0):]

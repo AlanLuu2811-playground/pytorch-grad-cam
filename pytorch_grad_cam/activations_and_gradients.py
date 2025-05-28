@@ -1,3 +1,6 @@
+from functools import partial
+from typing import Dict
+
 class ActivationsAndGradients:
     """ Class for extracting activations and
     registering gradients from targetted intermediate layers """
@@ -27,9 +30,9 @@ class ActivationsAndGradients:
             self.activations.append(activation)
 
     def save_gradient(self, module, input, output):
-        if not hasattr(output, "requires_grad") or not output.requires_grad:
+        #if not hasattr(output, "requires_grad") or not output.requires_grad:
             # You can only register hooks on tensor requires grad.
-            return
+        #return
 
         # Gradients are computed in reverse order
         def _store_grad(grad):
@@ -40,12 +43,15 @@ class ActivationsAndGradients:
             else:
                 self.gradients = [grad] + self.gradients
 
+        if isinstance(output, Dict):
+            output = output['s4']
+
         output.register_hook(_store_grad)
 
     def __call__(self, x):
         self.gradients = []
         self.activations = []
-        return self.model(x)
+        return self.model.predict(x)
 
     def release(self):
         for handle in self.handles:
